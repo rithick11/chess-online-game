@@ -61,7 +61,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				/* Chess-specific colors */
+				chess: {
+					light: 'hsl(var(--chess-light))',
+					dark: 'hsl(var(--chess-dark))',
+					border: 'hsl(var(--chess-border))'
+				},
+				check: 'hsl(var(--check-highlight))',
+				'valid-move': 'hsl(var(--valid-move))',
+				'last-move': 'hsl(var(--last-move))',
+				'selected-piece': 'hsl(var(--selected-piece))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
