@@ -36,4 +36,7 @@ export interface GameState {
   isStalemate: boolean;
   gameStatus: 'playing' | 'checkmate' | 'stalemate' | 'draw';
   enPassantTarget: Position | null;
+  gameMode: 'pvp' | 'computer';
+  aiColor: PieceColor | null;
+  aiDifficulty: 'easy' | 'medium' | 'hard';
 }

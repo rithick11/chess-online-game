@@ -3,6 +3,7 @@ import { GameControls } from './GameControls';
 import { MoveHistory } from './MoveHistory';
 import { CapturedPieces } from './CapturedPieces';
 import { GameStatus } from './GameStatus';
+import { GameModeSelector } from './GameModeSelector';
 import { useChessGame } from '@/hooks/useChessGame';
 
 export function ChessGame() {
@@ -32,6 +33,12 @@ export function ChessGame() {
             A sophisticated chess experience with complete rule implementation
           </p>
         </div>
+
+        {/* Game Mode Selector */}
+        <GameModeSelector 
+          onStartGame={newGame}
+          currentMode={gameState.gameMode}
+        />
 
         {/* Game Status */}
         <div className="mb-6">

@@ -9,6 +9,7 @@ import {
   generateAlgebraicNotation,
   isSamePosition
 } from '@/utils/chessLogic';
+import { ChessAI } from '@/utils/chessAI';
 import { toast } from '@/hooks/use-toast';
 
 export function useChessGame() {
@@ -24,8 +25,13 @@ export function useChessGame() {
     isCheckmate: false,
     isStalemate: false,
     gameStatus: 'playing',
-    enPassantTarget: null
+    enPassantTarget: null,
+    gameMode: 'pvp',
+    aiColor: null,
+    aiDifficulty: 'medium'
   }));
+
+  const [chessAI] = useState(() => new ChessAI({ depth: 3, difficulty: 'medium' }));
 
   // Check game state after each move
   useEffect(() => {
@@ -65,8 +71,30 @@ export function useChessGame() {
     }
   }, [gameState.board, gameState.currentPlayer, gameState.moveHistory.length]);
 
+  // AI move effect
+  useEffect(() => {
+    if (gameState.gameMode === 'computer' && 
+        gameState.currentPlayer === gameState.aiColor && 
+        gameState.gameStatus === 'playing') {
+      
+      const timeoutId = setTimeout(() => {
+        const aiMove = chessAI.getBestMove(gameState.board, gameState.currentPlayer);
+        if (aiMove) {
+          setGameState(prev => makeMove(prev, aiMove.from, aiMove.to));
+        }
+      }, 500); // Small delay for better UX
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [gameState.currentPlayer, gameState.gameMode, gameState.aiColor, gameState.gameStatus, gameState.board, chessAI]);
+
   const handleSquareClick = useCallback((position: Position) => {
     setGameState(prev => {
+      // Don't allow moves if it's AI's turn
+      if (prev.gameMode === 'computer' && prev.currentPlayer === prev.aiColor) {
+        return prev;
+      }
+      
       const { board, selectedSquare, validMoves, currentPlayer } = prev;
       const clickedPiece = board[position.row][position.col];
 
@@ -119,6 +147,11 @@ export function useChessGame() {
 
   const handlePieceMove = useCallback((from: Position, to: Position) => {
     setGameState(prev => {
+      // Don't allow moves if it's AI's turn
+      if (prev.gameMode === 'computer' && prev.currentPlayer === prev.aiColor) {
+        return prev;
+      }
+      
       const { board, currentPlayer } = prev;
       const piece = board[from.row][from.col];
       
@@ -225,7 +258,10 @@ export function useChessGame() {
     };
   };
 
-  const newGame = useCallback(() => {
+  const newGame = useCallback((gameMode: 'pvp' | 'computer' = 'pvp', aiColor: PieceColor = 'black', difficulty: 'easy' | 'medium' | 'hard' = 'medium') => {
+    // Update AI difficulty
+    chessAI.config = { depth: difficulty === 'easy' ? 2 : difficulty === 'medium' ? 3 : 4, difficulty };
+    
     setGameState({
       board: createInitialBoard(),
       currentPlayer: 'white',
@@ -238,14 +274,17 @@ export function useChessGame() {
       isCheckmate: false,
       isStalemate: false,
       gameStatus: 'playing',
-      enPassantTarget: null
+      enPassantTarget: null,
+      gameMode,
+      aiColor: gameMode === 'computer' ? aiColor : null,
+      aiDifficulty: difficulty
     });
     
     toast({
       title: "New Game",
-      description: "A new chess game has started!",
+      description: gameMode === 'computer' ? "New game vs Computer started!" : "A new chess game has started!",
     });
-  }, []);
+  }, [chessAI]);
 
   const undoMove = useCallback(() => {
     setGameState(prev => {
@@ -273,7 +312,10 @@ export function useChessGame() {
         isCheckmate: false,
         isStalemate: false,
         gameStatus: 'playing',
-        enPassantTarget: null
+        enPassantTarget: null,
+        gameMode: prev.gameMode,
+        aiColor: prev.aiColor,
+        aiDifficulty: prev.aiDifficulty
       };
 
       // Replay moves

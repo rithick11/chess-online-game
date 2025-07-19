@@ -1,13 +1,14 @@
 import { GameState, PieceColor } from '@/types/chess';
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, AlertTriangle, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Crown, AlertTriangle, Clock, Bot, Users } from 'lucide-react';
 
 interface GameStatusProps {
   gameState: GameState;
 }
 
 export function GameStatus({ gameState }: GameStatusProps) {
-  const { currentPlayer, isCheck, gameStatus } = gameState;
+  const { currentPlayer, isCheck, gameStatus, gameMode, aiColor, aiDifficulty } = gameState;
   
   const getStatusMessage = () => {
     if (gameStatus === 'checkmate') {
@@ -43,8 +44,21 @@ export function GameStatus({ gameState }: GameStatusProps) {
       };
     }
     
+    // Show appropriate message based on game mode
+    if (gameMode === 'computer' && currentPlayer === aiColor) {
+      return {
+        message: 'Computer is thinking...',
+        icon: <Bot className="w-5 h-5 animate-pulse" />,
+        variant: 'default' as const
+      };
+    }
+    
+    const playerName = gameMode === 'computer' 
+      ? (currentPlayer === aiColor ? 'Computer' : 'Your') 
+      : `${currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1)}'s`;
+    
     return {
-      message: `${currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1)}'s turn`,
+      message: `${playerName} turn`,
       icon: <Clock className="w-5 h-5" />,
       variant: 'default' as const
     };
@@ -70,14 +84,41 @@ export function GameStatus({ gameState }: GameStatusProps) {
   return (
     <Card className={`${getVariantStyles(status.variant)} border transition-all duration-300`}>
       <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          {status.icon}
-          <div>
-            <p className="font-semibold text-lg">{status.message}</p>
-            {gameStatus === 'playing' && (
-              <p className="text-sm opacity-80 mt-1">
-                Click a piece to see available moves
-              </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {status.icon}
+            <div>
+              <p className="font-semibold text-lg">{status.message}</p>
+              {gameStatus === 'playing' && gameMode === 'pvp' && (
+                <p className="text-sm opacity-80 mt-1">
+                  Click a piece to see available moves
+                </p>
+              )}
+              {gameStatus === 'playing' && gameMode === 'computer' && currentPlayer !== aiColor && (
+                <p className="text-sm opacity-80 mt-1">
+                  Your turn - click a piece to move
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {/* Game Mode Info */}
+          <div className="flex items-center gap-2">
+            {gameMode === 'computer' ? (
+              <>
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Bot className="w-3 h-3" />
+                  vs AI
+                </Badge>
+                <Badge variant="outline" className="capitalize">
+                  {aiDifficulty}
+                </Badge>
+              </>
+            ) : (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                PvP
+              </Badge>
             )}
           </div>
         </div>
